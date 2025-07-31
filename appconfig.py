@@ -145,8 +145,13 @@ class AppConfig:
         if response.status_code != 200:
             logger.error(f"[AppConfig] Destination token error: {response.text}")
             raise ValueError(f"Failed to retrieve destination token: Status {response.status_code} - {response.text}")
-        logger.info(f"[AppConfig] Destination token response: {response.json()}")
-        self.destination_token_cache["token"] = response.json().get('access_token')
+        try:
+            json_response = response.json()
+            logger.info(f"[AppConfig] Destination token response: {json_response}")
+            self.destination_token_cache["token"] = json_response.get('access_token')
+        except Exception as ex:
+            logger.error(f"[AppConfig] Failed to decode JSON response: {response.text}")
+            raise
         logger.info(f"[AppConfig] Destination token: {self.destination_token_cache['token'][:10]}... (truncated)")
         self.destination_token_cache["expires_at"] = datetime.datetime.now().timestamp() + 2 * 3600  # 2 hours
 
@@ -179,7 +184,14 @@ class AppConfig:
             logger.error(f"[AppConfig] Connectivity token error: {response.text}")
             raise ValueError(f"Failed to retrieve connectivity token: Status {response.status_code} - {response.text}")
 
-        self.connectivity_token_cache["token"] = response.json().get('access_token')
+        try:
+            json_response = response.json()
+            logger.info(f"[AppConfig] Connectivity token response: {json_response}")
+            self.connectivity_token_cache["token"] = json_response.get('access_token')
+            logger.info(f"[AppConfig] Connectivity token: {self.connectivity_token_cache['token'][:10]}... (truncated)")
+        except Exception as ex:
+            logger.error(f"[AppConfig] Failed to decode JSON response: {response.text}")
+            raise
         self.connectivity_token_cache["expires_at"] = datetime.datetime.now().timestamp() + 2 * 3600  # 2 hours
 
 
