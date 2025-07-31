@@ -2,12 +2,6 @@ fastapi
 uvicorn
 requests
 urllib3
-cfenv==0.5.3
-auth0-python==4.7.2
 oauthlib==3.2.2
-PyJWT==2.10.1
 python-dotenv==1.1.0
-PyYAML==6.0.2
 requests_oauthlib==2.0.0
-sap_cf_logging==4.2.7
-sap_xssec==4.1.0
