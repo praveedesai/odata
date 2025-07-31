@@ -8,17 +8,18 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 from opencensus.ext.azure.log_exporter import AzureLogHandler
 
 # Replace <YOUR_CONNECTION_STRING> with your Application Insights connection string
-logger.addHandler(
-    AzureLogHandler(
-        connection_string='InstrumentationKey=cc6052c0-78d7-488f-b9d0-e08ccd3528f0;IngestionEndpoint=https://southindia-0.in.applicationinsights.azure.com/;LiveEndpoint=https://southindia.livediagnostics.monitor.azure.com/;ApplicationId=266a2e66-e171-445e-a1f4-52bd6b661758'
-    )
-)
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s %(message)s"
 )
 logger = logging.getLogger(__name__)
 
+logger.addHandler(
+    AzureLogHandler(
+        connection_string='InstrumentationKey=cc6052c0-78d7-488f-b9d0-e08ccd3528f0;IngestionEndpoint=https://southindia-0.in.applicationinsights.azure.com/;LiveEndpoint=https://southindia.livediagnostics.monitor.azure.com/;ApplicationId=266a2e66-e171-445e-a1f4-52bd6b661758'
+    )
+)
 from appconfig import get_config_instance
 
 app = FastAPI()
