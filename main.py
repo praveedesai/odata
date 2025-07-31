@@ -6,18 +6,22 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 from appconfig import get_config_instance
 
-app = FastAPI()
+try:
+    app = FastAPI()
 
-# full_url = "https://inawconetput1.atrapa.deloitte.com:44300/sap/opu/odata4/sap/zs3_acdoca/srvd_a2x/sap/zs_acdoca/0001/ZC_ACDOCA"  # Replace with your API URL
-full_url = "http://inawconetput1.atrapa.deloitte.com:8000/sap/opu/odata4/sap/zsb_po_grn_sb4/srvd_a2x/sap/zsd_po_grn_det/0001/ZC_GRN_PO_DET?"
+    full_url = "http://inawconetput1.atrapa.deloitte.com:8000/sap/opu/odata4/sap/zsb_po_grn_sb4/srvd_a2x/sap/zsd_po_grn_det/0001/ZC_GRN_PO_DET?"
 
 
-config = get_config_instance()
-ODATA_USERNAME = config.ODATA_USERNAME
-ODATA_PASSWORD=  config.ODATA_PASSWORD
-ODATA_HEADERS =  config.ODATA_HEADERS if not config.LOCAL_ENV else None
-ODATA_PROXIES =  config.PROXIES if not config.LOCAL_ENV else None
-ODATA_ENDPOINT = config.ODATA_ENDPOINT
+    config = get_config_instance()
+    ODATA_USERNAME = config.ODATA_USERNAME
+    ODATA_PASSWORD=  config.ODATA_PASSWORD
+    ODATA_HEADERS =  config.ODATA_HEADERS if not config.LOCAL_ENV else None
+    ODATA_PROXIES =  config.PROXIES if not config.LOCAL_ENV else None
+    ODATA_ENDPOINT = config.ODATA_ENDPOINT
+except Exception as e:
+    import sys
+    print(f"Config initialization failed: {e}", file=sys.stderr)
+    raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/fetch-ten")
 def fetch_ten_rows():
