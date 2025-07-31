@@ -8,7 +8,8 @@ from appconfig import get_config_instance
 
 app = FastAPI()
 
-full_url = "https://inawconetput1.atrapa.deloitte.com:44300/sap/opu/odata4/sap/zs3_acdoca/srvd_a2x/sap/zs_acdoca/0001/ZC_ACDOCA"  # Replace with your API URL
+# full_url = "https://inawconetput1.atrapa.deloitte.com:44300/sap/opu/odata4/sap/zs3_acdoca/srvd_a2x/sap/zs_acdoca/0001/ZC_ACDOCA"  # Replace with your API URL
+full_url = "http://inawconetput1.atrapa.deloitte.com:8000/sap/opu/odata4/sap/zsb_po_grn_sb4/srvd_a2x/sap/zsd_po_grn_det/0001/ZC_GRN_PO_DET?"
 
 
 config = get_config_instance()
