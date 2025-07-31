@@ -5,3 +5,5 @@ urllib3
 oauthlib==3.2.2
 python-dotenv==1.1.0
 requests_oauthlib==2.0.0
+opencensus-ext-azure
+opencensus-ext-logging
