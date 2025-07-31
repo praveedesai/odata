@@ -3,13 +3,18 @@ import json
 import base64
 import requests
 import datetime
+import logging
 from os.path import join, dirname, exists
 from dotenv import load_dotenv
-
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 config_instance = None
 
@@ -24,13 +29,15 @@ class AppConfig:
             print(f"Warning: .env file not found at {dotenv_path}")
 
         self.LOCAL_ENV = os.getenv("ENV", "PROD").upper() == "LOCAL"
-        
+        logger.info(f"[AppConfig] ENV mode: {'LOCAL' if self.LOCAL_ENV else 'PROD'}")
         self.destination_token_cache = {"token": None, "expires_at": None}
         self.connectivity_token_cache = {"token": None, "expires_at": None}
 
         if self.LOCAL_ENV:
+            logger.info("[AppConfig] Loading local environment variables...")
             self._load_local_env()
         else:
+            logger.info("[AppConfig] Loading production environment variables...")
             self._load_production_env()
         self.app = self._create_fastapi_app()   
   
@@ -65,6 +72,7 @@ class AppConfig:
         self.ODATA_ENDPOINT = self._get_env_var("ODATA_ENDPOINT")       
         self.PROXIES = None
         self.ODATA_HEADERS = None
+        logger.info(f"[AppConfig] Local ODATA config: USERNAME={self.ODATA_USERNAME}, ENDPOINT={self.ODATA_ENDPOINT}")
         
 
     def _load_production_env(self):
@@ -74,25 +82,25 @@ class AppConfig:
     
     def _set_destination_service(self):        
         self.destination_name = "DOUS4HANA"
-                    
+        logger.info("[AppConfig] Fetching destination and connectivity tokens...")
         token = self.get_destination_token()
         conn_token = self.get_connectivity_token()
-            
+        logger.info(f"[AppConfig] Destination token: {token[:10]}... (truncated)")
+        logger.info(f"[AppConfig] Connectivity token: {conn_token[:10]}... (truncated)")
         headers = {'Authorization': f'Bearer {token}', 'Accept': 'application/json'}
         destination_url = f"{os.getenv('DESTINATION_SERVICE_URL')}/destination-configuration/v1/destinations/{self.destination_name}"
+        logger.info(f"[AppConfig] Requesting destination details from: {destination_url}")
         destination_details = requests.get(destination_url, headers=headers)
 
         if destination_details.status_code != 200:
+            logger.error(f"[AppConfig] Destination details error: {destination_details.text}")
             raise ValueError(f"Failed to retrieve destination: Status {destination_details.status_code} - {destination_details.text}")
         
         destination_response = destination_details.json()
-            
+        logger.info(f"[AppConfig] Retrieved destination config keys: {list(destination_response['destinationConfiguration'].keys())}")
         self.ODATA_USERNAME = destination_response['destinationConfiguration'].get('User')
         self.ODATA_PASSWORD = destination_response['destinationConfiguration'].get('Password')
-           
         self.ODATA_ENDPOINT = f"{destination_response['destinationConfiguration']['URL']}"          
-            
-            
         conn_proxy_host = os.getenv('CONNECTIVITY_SERVICE_ONPREMISE_PROXY_HOST')
         conn_proxy_port = int(os.getenv('CONNECTIVITY_SERVICE_ONPREMISE_PROXY_PORT'))
         self.PROXIES = {
@@ -123,14 +131,17 @@ class AppConfig:
         destination_url = os.getenv("DESTINATION_SERVICE_URL")
         destination_client_id = os.getenv("DESTINATION_SERVICE_CLIENT_ID")
         destination_client_secret = os.getenv("DESTINATION_SERVICE_CLIENT_SECRET")
+        logger.info(f"[AppConfig] Refreshing destination token for URL: {destination_url}")
         if not (destination_url and destination_client_id and destination_client_secret):
+            logger.error("[AppConfig] Missing destination token env vars!")
             raise ValueError("Missing DESTINATION_SERVICE_URL, DESTINATION_SERVICE_CLIENT_ID, or DESTINATION_SERVICE_CLIENT_SECRET in environment variables.")
 
         auth_header = self._get_basic_auth_header_env(destination_client_id, destination_client_secret)
         form_data = self._get_token_form_data_env(destination_client_id, destination_client_secret)
         response = requests.post(f"{destination_url}", data=form_data, headers=auth_header)
-
+        logger.info(f"[AppConfig] Destination token response status: {response.status_code}")
         if response.status_code != 200:
+            logger.error(f"[AppConfig] Destination token error: {response.text}")
             raise ValueError(f"Failed to retrieve destination token: Status {response.status_code} - {response.text}")
 
         self.destination_token_cache["token"] = response.json().get('access_token')
@@ -152,14 +163,17 @@ class AppConfig:
         connectivity_url = os.getenv("CONNECTIVITY_SERVICE_URL")
         connectivity_client_id = os.getenv("CONNECTIVITY_SERVICE_CLIENT_ID")
         connectivity_client_secret = os.getenv("CONNECTIVITY_SERVICE_CLIENT_SECRET")
+        logger.info(f"[AppConfig] Refreshing connectivity token for URL: {connectivity_url}")
         if not (connectivity_url and connectivity_client_id and connectivity_client_secret):
+            logger.error("[AppConfig] Missing connectivity token env vars!")
             raise ValueError("Missing CONNECTIVITY_SERVICE_URL, CONNECTIVITY_SERVICE_CLIENT_ID, or CONNECTIVITY_SERVICE_CLIENT_SECRET in environment variables.")
 
         auth_header = self._get_basic_auth_header_env(connectivity_client_id, connectivity_client_secret)
         form_data = self._get_token_form_data_env(connectivity_client_id, connectivity_client_secret)
         response = requests.post(f"{connectivity_url}/oauth/token", data=form_data, headers=auth_header)
-
+        logger.info(f"[AppConfig] Connectivity token response status: {response.status_code}")
         if response.status_code != 200:
+            logger.error(f"[AppConfig] Connectivity token error: {response.text}")
             raise ValueError(f"Failed to retrieve connectivity token: Status {response.status_code} - {response.text}")
 
         self.connectivity_token_cache["token"] = response.json().get('access_token')
