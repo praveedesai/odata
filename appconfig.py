@@ -138,13 +138,16 @@ class AppConfig:
 
         auth_header = self._get_basic_auth_header_env(destination_client_id, destination_client_secret)
         form_data = self._get_token_form_data_env(destination_client_id, destination_client_secret)
+        logger.info(f"[AppConfig] Destination token request: {form_data}")
+        logger.info(f"[AppConfig] Destination token auth header: {auth_header}")
         response = requests.post(f"{destination_url}", data=form_data, headers=auth_header)
         logger.info(f"[AppConfig] Destination token response status: {response.status_code}")
         if response.status_code != 200:
             logger.error(f"[AppConfig] Destination token error: {response.text}")
             raise ValueError(f"Failed to retrieve destination token: Status {response.status_code} - {response.text}")
-
+        logger.info(f"[AppConfig] Destination token response: {response.json()}")
         self.destination_token_cache["token"] = response.json().get('access_token')
+        logger.info(f"[AppConfig] Destination token: {self.destination_token_cache['token'][:10]}... (truncated)")
         self.destination_token_cache["expires_at"] = datetime.datetime.now().timestamp() + 2 * 3600  # 2 hours
 
     def _get_basic_auth_header_env(self, clientid, clientsecret):
