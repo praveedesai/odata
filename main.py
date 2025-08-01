@@ -24,6 +24,21 @@ from appconfig import get_config_instance
 
 app = FastAPI()
 
+@app.get("/odataconnectivity")
+def call_fetch_ten():
+    """
+    Calls the external API and returns its response.
+    """
+    url = "https://odataconnectivity-reliable-capybara-yi.cfapps.eu10-004.hana.ondemand.com/fetch-ten"
+    try:
+        response = requests.get(url, verify=False)
+        response.raise_for_status()
+        logger.info(f"[main.py] /call-fetch-ten called. Status: {response.status_code}")
+        return response.json() if response.headers.get('content-type', '').startswith('application/json') else {"data": response.text}
+    except Exception as e:
+        logger.error(f"[main.py] /call-fetch-ten error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 config = get_config_instance()
 logger.info("[main.py] Loaded config instance.")
 logger.info(f"[main.py] ODATA_USERNAME: {config.ODATA_USERNAME}")
