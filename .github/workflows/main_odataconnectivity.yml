@@ -5,9 +5,9 @@
 name: Build and deploy Python app to Azure Web App - odataCOnnectivity
 
 on:
-  push:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - main
   workflow_dispatch:
   
 jobs:
@@ -60,4 +60,5 @@ jobs:
           slot-name: 'Production'
 
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_34297074D4974EC28E2D456D65904E52 }}
+
 
